@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 1. Productos de la ferretería
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  price       Float
+  stock       Int
+  createdAt   DateTime @default(now())
+
+  // Relación: Un producto puede estar en muchos pedidos
+  orderItems OrderItem[]
+}
+
+// 2. Pedidos de los clientes
+model Order {
+  id              Int      @id @default(autoincrement())
+  customerName    String
+  customerPhone   String
+  customerAddress String
+  totalAmount     Float
+  createdAt       DateTime @default(now())
+
+  // Relación: Un pedido tiene muchos items
+  items OrderItem[]
+}
+
+// 3. Tabla intermedia (Detalle del pedido)
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  quantity Int
+  price    Float // Precio al momento de la compra
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+// 4. Historial de Conversación
+model Conversation {
+  id        Int      @id @default(autoincrement())
+  userPhone String // Identificador del usuario (su celular)
+  message   String // El mensaje
+  role      String // 'user' o 'assistant'
+  createdAt DateTime @default(now())
+}
