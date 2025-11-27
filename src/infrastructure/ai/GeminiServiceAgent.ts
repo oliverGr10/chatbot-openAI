@@ -264,6 +264,9 @@ export class GeminiServiceAgent implements IAIService {
         decision: AgentAction,
         actionResult: string
     ): string {
+        // Detectar si es el primer mensaje (no hay historial)
+        const isFirstMessage = !history || history.trim().length === 0;
+
         let prompt = `Eres un asistente virtual amigable de una ferretería en Perú.
 
 IMPORTANTE: Responde SIEMPRE como texto natural conversacional, NO uses código, JSON ni formato técnico.
@@ -277,6 +280,13 @@ Usuario: ${userMessage}
         if (decision.action !== 'respond' && actionResult) {
             prompt += `[INFORMACIÓN OBTENIDA]\n${actionResult}\n\n`;
             prompt += `Usa esta información para responder al usuario de manera natural, amigable y conversacional. No menciones que consultaste una base de datos. Presenta la información de forma clara y cercana.\n\n`;
+        }
+
+        // Instrucción condicional sobre saludar
+        if (isFirstMessage) {
+            prompt += `Este es el PRIMER mensaje del usuario. Saluda amablemente con "¡Hola! ¿En qué puedo ayudarte hoy?" y responde su consulta.\n\n`;
+        } else {
+            prompt += `Esta es una conversación en curso. NO saludes nuevamente, simplemente responde la pregunta de forma directa y amigable.\n\n`;
         }
 
         prompt += `Responde ahora como un vendedor amigable de ferretería (texto natural, sin código):\n\nAsistente:`;

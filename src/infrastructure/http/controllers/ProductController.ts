@@ -22,14 +22,12 @@ export class ProductController {
         try {
             const id = parseInt(req.params.id || '0');
 
-            // Validar que el ID sea válido
             if (isNaN(id) || id <= 0) {
                 throw new BadRequestError('ID de producto inválido');
             }
 
             const product = await this.getProductsUseCase.executeById(id);
 
-            // Si no existe el producto, lanzar error 404
             if (!product) {
                 throw new NotFoundError(`Producto con ID ${id} no encontrado`);
             }

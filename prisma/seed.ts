@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding database...');
 
-  // Productos del examen técnico
   const products = [
     {
       name: 'Cemento Portland Tipo I (Bolsa 42.5 kg)',
