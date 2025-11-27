@@ -664,7 +664,7 @@ El código demuestra conocimientos sólidos en:
 
 **Desarrollado por:** Oliver Granda
 **Tecnologías:** Node.js, TypeScript, Express, Prisma, Gemini AI, ChromaDB
-**Repositorio:** [GitHub - Tu repo aquí]
+**Repositorio:** [(https://github.com/oliverGr10/chatbot-openAI)]
 
 ---
 
