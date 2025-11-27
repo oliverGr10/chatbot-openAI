@@ -3,6 +3,7 @@ import type { IAIService } from '../../domain/interfaces/IAIService.js';
 import type { IProductRepository } from '../../domain/interfaces/IProductRepository.js';
 import type { IOrderRepository } from '../../domain/interfaces/IOrderRepository.js';
 import type { ChatContext } from '../../domain/entities/Message.js';
+import { RateLimitError, InternalServerError } from '../../utils/AppError.js';
 
 interface AgentAction {
     action: 'get_products' | 'create_order' | 'search_faqs' | 'respond';
@@ -88,9 +89,16 @@ export class GeminiServiceAgent implements IAIService {
 
             return responseText;
 
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error generating AI response:', error);
-            throw new Error('Failed to generate response from AI service');
+
+            if (error.status === 429 || error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED')) {
+                throw new RateLimitError(
+                    'El servicio de IA está temporalmente saturado. Por favor, intenta nuevamente en unos segundos.'
+                );
+            }
+
+            throw new InternalServerError('No se pudo procesar tu mensaje. Por favor, intenta nuevamente.');
         }
     }
 
@@ -322,6 +330,21 @@ INFORMACIÓN DE CONTACTO:
 - Horario: Lunes a Sábado 8:00 AM - 6:00 PM
 - Pagos: Transferencias, Yape, Plin
 - Entrega a domicilio: Sí
+
+PRODUCTOS DISPONIBLES:
+Solo vendemos productos de ferretería y construcción: cemento, fierro, clavos, pintura, brochas, herramientas, guantes, focos LED, etc.
+
+QUÉ HACER SI NO TENEMOS EL PRODUCTO:
+- Si preguntan por productos NO relacionados con ferretería (ropa, comida, electrónicos, etc.):
+  → Responde amablemente que somos una ferretería y NO vendemos ese tipo de productos
+  → Sugiere productos de ferretería que SÍ tenemos
+
+- Si preguntan por un producto de ferretería que NO está en stock:
+  → Usa get_products para verificar
+  → Si no aparece (count: 0), indica que NO lo tenemos disponible actualmente
+  → Sugiere productos similares que SÍ tenemos
+
+Ejemplo: "Lo siento, no vendemos ropa, somos una ferretería especializada en materiales de construcción y herramientas. ¿Te interesa ver nuestros guantes de seguridad o cascos de protección?"
 
 IMPORTANTE: Siempre decide la acción ANTES de responder. Sé proactivo en consultar la base de datos cuando sea necesario.`;
     }

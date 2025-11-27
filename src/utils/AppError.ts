@@ -43,3 +43,9 @@ export class InternalServerError extends AppError {
         super(message, 500, 'INTERNAL_SERVER_ERROR');
     }
 }
+
+export class RateLimitError extends AppError {
+    constructor(message: string = 'Too many requests. Please try again later.') {
+        super(message, 429, 'RATE_LIMIT_EXCEEDED');
+    }
+}

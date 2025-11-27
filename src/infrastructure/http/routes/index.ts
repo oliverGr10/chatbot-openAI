@@ -14,14 +14,11 @@ export function createRoutes(
         res.json({ status: 'ok', message: 'Chatbot API is running' });
     });
 
-    // Chat routes
     router.post('/chat/message', (req, res, next) => chatController.sendMessage(req, res, next));
 
-    // Product routes
     router.get('/products', (req, res, next) => productController.getAllProducts(req, res, next));
     router.get('/products/:id', (req, res, next) => productController.getProductById(req, res, next));
 
-    // Order routes
     router.post('/orders', (req, res, next) => orderController.createOrder(req, res, next));
 
     return router;

@@ -32,11 +32,7 @@ export class ChromaDBService {
     }
 
     private async generateEmbedding(text: string): Promise<number[]> {
-        // Implementación temporal: genera embeddings sintéticos basados en el texto
-        // En producción: usar modelo de embeddings real (ej: text-embedding-004 de Google)
 
-        // Por ahora usamos un embedding simple basado en hash del texto
-        // Esto permite que el sistema funcione sin API de embeddings
         const embedding = Array.from({ length: 768 }, (_, i) => {
             const hash = this.simpleHash(text + i.toString());
             return (hash % 200 - 100) / 100; // Normalizar a [-1, 1]
@@ -70,7 +66,7 @@ export class ChromaDBService {
 
             for (let i = 0; i < faqs.length; i++) {
                 const faq = faqs[i];
-                if (!faq) continue; // Skip undefined entries
+                if (!faq) continue;
 
                 const combinedText = `${faq.question} ${faq.answer}`;
 

@@ -5,13 +5,11 @@ import { text } from 'stream/consumers';
 
 export class OrderRepository implements IOrderRepository {
     async create(orderData: CreateOrderDTO): Promise<Order> {
-  // Usar una transacción para garantizar atomicidad
   return await prisma.$transaction(async (tx) => {
     let totalAmount = 0;
     const itemsWithPrice = [];
 
     for (const item of orderData.items) {
-      // Leer el producto DENTRO de la transacción
       const product = await tx.product.findUnique({
         where: { id: item.productId },
       });
@@ -20,7 +18,6 @@ export class OrderRepository implements IOrderRepository {
         throw new Error(`Product with ID ${item.productId} not found`);
       }
 
-      // Validar stock
       if (product.stock < item.quantity) {
         throw new Error(`Insufficient stock for product: ${product.name}`);
       }
@@ -34,14 +31,12 @@ export class OrderRepository implements IOrderRepository {
         price: product.price,
       });
 
-      // Actualizar stock INMEDIATAMENTE dentro de la transacción
       await tx.product.update({
         where: { id: item.productId },
         data: { stock: product.stock - item.quantity },
       });
     }
 
-    // Crear el pedido
     const order = await tx.order.create({
       data: {
         customerName: orderData.customerName,

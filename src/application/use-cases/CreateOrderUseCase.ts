@@ -10,12 +10,11 @@ export class CreateOrderUseCase {
     ) { }
 
     async execute(orderData: CreateOrderDTO): Promise<Order> {
-        // Validar que hay items en el pedido
+
         if (!orderData.items || orderData.items.length === 0) {
             throw new ValidationError('El pedido debe contener al menos un producto');
         }
 
-        // Validar productos existen y tienen stock suficiente
         for (const item of orderData.items) {
             const product = await this.productRepo.findById(item.productId);
 
@@ -34,7 +33,6 @@ export class CreateOrderUseCase {
             }
         }
 
-        // Crear el pedido (el repositorio maneja la actualización de stock)
         const order = await this.orderRepo.create(orderData);
 
         return order;
