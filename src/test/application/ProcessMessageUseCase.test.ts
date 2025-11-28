@@ -25,7 +25,7 @@ describe('ProcessMessageUseCase - Orquestación de Conversación', () => {
     );
   });
 
-  test('debe guardar el mensaje del usuario ANTES de procesar', async () => {
+  test('debe obtener contexto para detectar si es primera conversación', async () => {
     // Arrange
     const userPhone = '987654321';
     const userMessage = 'Hola, ¿tienen cemento?';
@@ -39,13 +39,9 @@ describe('ProcessMessageUseCase - Orquestación de Conversación', () => {
     // Act
     await processMessageUseCase.execute(userPhone, userMessage);
 
-    // Assert
-    expect(mockConversationRepo.saveMessage).toHaveBeenNthCalledWith(
-      1,
-      userPhone,
-      userMessage,
-      'user'
-    );
+    // Assert - getContext debe ser llamado para obtener el historial
+    expect(mockConversationRepo.getContext).toHaveBeenCalledWith(userPhone);
+    expect(mockConversationRepo.getContext).toHaveBeenCalledTimes(1);
   });
 
   test('debe obtener el contexto de conversación para el usuario', async () => {
@@ -155,7 +151,7 @@ describe('ProcessMessageUseCase - Orquestación de Conversación', () => {
     expect(result).toBe(aiResponse);
   });
 
-  test('debe ejecutar pasos en el orden correcto: guardar > contexto > IA > guardar', async () => {
+  test('debe ejecutar pasos en el orden correcto: contexto > guardar > IA > guardar', async () => {
     // Arrange
     const userPhone = '987654321';
     const userMessage = 'Test mensaje';
@@ -184,13 +180,38 @@ describe('ProcessMessageUseCase - Orquestación de Conversación', () => {
     // Act
     await processMessageUseCase.execute(userPhone, userMessage);
 
-    // Assert
+    // Assert - El contexto debe obtenerse ANTES de guardar el mensaje del usuario
     expect(callOrder).toEqual([
-      'save-user',
-      'getContext',
-      'generateResponse',
-      'save-assistant',
+      'getContext',        // 1. Obtener contexto primero
+      'save-user',         // 2. Guardar mensaje del usuario
+      'generateResponse',  // 3. Generar respuesta con IA
+      'save-assistant',    // 4. Guardar respuesta del asistente
     ]);
+  });
+
+  test('debe pasar contexto vacío a la IA para la primera conversación', async () => {
+    // Arrange
+    const userPhone = '+51999999999';
+    const userMessage = 'Hola, quiero construir';
+    const emptyHistory: Message[] = [];
+    const emptyContext = { userPhone, history: emptyHistory };
+    const aiResponse = '¡Hola! ¿En qué puedo ayudarte hoy? Veo que quieres construir algo.';
+
+    mockConversationRepo.getContext.mockResolvedValue(emptyContext);
+    mockAIService.generateResponse.mockResolvedValue(aiResponse);
+
+    // Act
+    await processMessageUseCase.execute(userPhone, userMessage);
+
+    // Assert - La IA debe recibir el contexto ANTES de que se guarde el mensaje
+    expect(mockAIService.generateResponse).toHaveBeenCalledWith(
+      emptyContext, // Contexto vacío (sin el mensaje actual)
+      userMessage
+    );
+
+    // Verificar que el historial pasado a la IA está vacío
+    const callArgs = (mockAIService.generateResponse as any).mock.calls[0];
+    expect(callArgs[0].history).toHaveLength(0);
   });
 
   test('debe propagar errores si la IA falla', async () => {

@@ -72,9 +72,21 @@ export function buildFinalPrompt(
     history: string,
     userMessage: string,
     decision: AgentAction,
-    actionResult: string
+    actionResult: string,
+    lastMessageTime?: Date
 ): string {
     const isFirstMessage = !history || history.trim().length === 0;
+
+    let shouldGreetAgain = false;
+    if (lastMessageTime) {
+        const hoursSinceLastMessage = (Date.now() - lastMessageTime.getTime()) / (1000 * 60 * 60);
+        shouldGreetAgain = hoursSinceLastMessage >= 1;
+
+        console.log('⏰ DEBUG Tiempo desde última conversación:');
+        console.log('  - lastMessageTime:', lastMessageTime);
+        console.log('  - hoursSinceLastMessage:', hoursSinceLastMessage.toFixed(2));
+        console.log('  - shouldGreetAgain:', shouldGreetAgain);
+    }
 
     let prompt = `Eres un asistente virtual amigable de una ferretería en Perú.
 
@@ -93,6 +105,8 @@ Usuario: ${userMessage}
 
     if (isFirstMessage) {
         prompt += `Este es el PRIMER mensaje del usuario. Saluda amablemente con "¡Hola! ¿En qué puedo ayudarte hoy?" y responde su consulta.\n\n`;
+    } else if (shouldGreetAgain) {
+        prompt += `Han pasado varias horas desde la última conversación. Saluda brevemente de nuevo con "¡Hola de nuevo!" o "¡Hola!" y responde su consulta.\n\n`;
     } else {
         prompt += `Esta es una conversación en curso. NO saludes nuevamente, simplemente responde la pregunta de forma directa y amigable.\n\n`;
     }

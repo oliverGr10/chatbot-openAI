@@ -65,12 +65,17 @@ export class GeminiServiceAgent implements IAIService {
                     break;
             }
 
+            const lastMessageTime = context.history.length > 0
+                ? context.history[context.history.length - 1]?.createdAt
+                : undefined;
+
             const finalPrompt = buildFinalPrompt(
                 systemPrompt,
                 conversationHistory,
                 userMessage,
                 decision,
-                actionResult
+                actionResult,
+                lastMessageTime
             );
 
             const finalResponse = await this.ai.models.generateContent({

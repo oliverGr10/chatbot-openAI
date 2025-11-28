@@ -9,9 +9,9 @@ export class ProcessMessageUseCase {
 
     async execute(userPhone: string, userMessage: string): Promise<string> {
 
-        await this.conversationRepo.saveMessage(userPhone, userMessage, 'user');
-
         const context = await this.conversationRepo.getContext(userPhone);
+
+        await this.conversationRepo.saveMessage(userPhone, userMessage, 'user');
 
         const aiResponse = await this.aiService.generateResponse(context, userMessage);
 
